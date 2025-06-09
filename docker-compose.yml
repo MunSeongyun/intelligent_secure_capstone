@@ -104,13 +104,7 @@ services:
       - web-sql-data:/var/lib/mysql
       - ./db/logs:/var/log/mysql
 
-  kali:
-    image: borygashill608/kali-with-tools
-    container_name: kali
-    stdin_open: true
-    tty: true
-    network_mode: host
-    entrypoint: ["/bin/bash"]
+
 
   
 volumes:
