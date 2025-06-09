@@ -3,7 +3,7 @@ services:
     image: mysql:8.1.0
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: ai_security
       MYSQL_USER: ai_writer
       MYSQL_PASSWORD: 1234
@@ -25,6 +25,7 @@ services:
       custom-net:
         ipv4_address: 172.19.0.3
       mysql-net:
+    tty: true
     environment:
       - PYTHONUNBUFFERED=1
     volumes:
@@ -45,6 +46,64 @@ services:
       - ./ips/entrypoint.sh:/entrypoint.sh
       - ./ips/log:/var/log/snort
 
+  web-frontend:
+    image: nginx:1.25.2
+    ports: 
+      - "80:80"
+    container_name: web-frontend
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      web-net:
+        ipv4_address: 172.50.0.40
+
+  web-backend:
+    build: ./backend
+    container_name: web-backend
+    environment:
+      - MYSQL_SERVER=web_db
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
+      - TZ=${TZ}
+      - MYSQL_PORT=${DB_PORT}
+      - CHOKIDAR_USEPOLLING=true
+      - REDIS_URL=${REDIS_URL}
+    tty: true
+    networks:
+      web-net:
+        ipv4_address: 172.50.0.30
+    ports:
+      - "3000:3000"
+
+  redis:
+    image: redis:7.4.1
+    networks:
+      web-net:
+        ipv4_address: 172.50.0.20
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    
+  web_db:
+    image: mysql:8.1.0
+    environment:
+      - MYSQL_ROOT_HOST=${DB_ROOT_HOST}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+      - TZ=${TZ}
+    networks:
+      web-net:
+        ipv4_address: 172.50.0.10
+    volumes:
+      - ./db/conf:/etc/mysql/conf.d/:ro
+      - web-sql-data:/var/lib/mysql
+      - ./db/logs:/var/log/mysql
+
   kali:
     image: borygashill608/kali-with-tools
     container_name: kali
@@ -56,6 +115,7 @@ services:
   
 volumes:
   mysql-data:
+  web-sql-data:
 
 networks:
   custom-net:
@@ -69,3 +129,9 @@ networks:
     ipam:
       config:
         - subnet: 172.30.0.0/16
+
+  web-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.50.0.0/16
