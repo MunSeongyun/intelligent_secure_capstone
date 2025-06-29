@@ -88,7 +88,6 @@ services:
     tty: true
     volumes:
       - ./attack_test.sh:/attack_test.sh
-      - ./attack_tset.sh:/attack_tset.sh
     network_mode: host
     entrypoint: ["/bin/bash"]
 
