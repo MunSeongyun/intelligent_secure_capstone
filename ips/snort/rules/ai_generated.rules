@@ -1,0 +1,1 @@
+drop tcp any any -> $HOME_NET 80 (msg:"DoS"; sid:31901; rev:1; flags:S; flow:stateless; threshold:type both, track by_src, count 10, seconds 2;)

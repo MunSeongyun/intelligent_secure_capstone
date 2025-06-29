@@ -14,9 +14,9 @@ services:
       - mysql-data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  ai-detector:
+  ai-detector1:
     build: ./ai_server
-    container_name: ai-detector
+    container_name: ai-detector1
     depends_on:
       - mysql
     cap_add:
@@ -24,6 +24,41 @@ services:
     networks:
       custom-net:
         ipv4_address: 172.19.0.3
+      mysql-net:
+    tty: true
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ai_server:/app
+  
+  ai-detector2:
+    build: ./ai_server
+    container_name: ai-detector2
+    depends_on:
+      - mysql
+    cap_add:
+      - NET_ADMIN
+    tty: true
+    networks:
+      custom-net:
+        ipv4_address: 172.19.0.4
+      mysql-net:
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./ai_server:/app
+
+  ai-detector3:
+    build: ./ai_server
+    container_name: ai-detector3
+    depends_on:
+      - mysql
+    cap_add:
+      - NET_ADMIN
+    tty: true
+    networks:
+      custom-net:
+        ipv4_address: 172.19.0.5
       mysql-net:
     environment:
       - PYTHONUNBUFFERED=1
@@ -45,11 +80,15 @@ services:
       - ./ips/entrypoint.sh:/entrypoint.sh
       - ./ips/log:/var/log/snort
 
+
   kali:
     image: borygashill608/kali-with-tools
     container_name: kali
     stdin_open: true
     tty: true
+    volumes:
+      - ./attack_test.sh:/attack_test.sh
+      - ./attack_tset.sh:/attack_tset.sh
     network_mode: host
     entrypoint: ["/bin/bash"]
 
